@@ -1,0 +1,184 @@
+---
+- name: Ensure kubeconfig uses v1beta1 and exec command uses AWS CLI v2
+  ansible.builtin.shell: |
+    for f in /root/.kube/config /home/ec2-user/.kube/config; do
+      [ -f "$f" ] || continue
+      sed -i 's/client\.authentication\.k8s\.io\/v1alpha1/client.authentication.k8s.io\/v1beta1/g' "$f"
+      sed -i 's/command: *aws/command: \/usr\/local\/bin\/aws/g' "$f"
+      sed -i 's/command: *"aws"/command: "\/usr\/local\/bin\/aws"/g' "$f"
+    done
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Install Helm
+  ansible.builtin.shell: |
+    export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+  args:
+    executable: /bin/bash
+    creates: /usr/local/bin/helm
+
+- name: Set env so exec plugin uses AWS CLI v2 and kubeconfig
+  ansible.builtin.set_fact:
+    helm_env:
+      PATH: "/usr/local/bin:/usr/bin:/bin"
+      KUBECONFIG: "/root/.kube/config"
+
+- name: Add EKS Helm repo
+  ansible.builtin.shell: /usr/local/bin/helm repo add eks https://aws.github.io/eks-charts
+  environment: "{{ helm_env }}"
+  changed_when: true
+
+- name: Update Helm repos
+  ansible.builtin.shell: /usr/local/bin/helm repo update
+  environment: "{{ helm_env }}"
+  changed_when: true
+
+- name: Add Argo Helm repo
+  ansible.builtin.shell: /usr/local/bin/helm repo add argo https://argoproj.github.io/argo-helm
+  environment: "{{ helm_env }}"
+  changed_when: true
+
+- name: Update Helm repos (Argo)
+  ansible.builtin.shell: /usr/local/bin/helm repo update
+  environment: "{{ helm_env }}"
+  changed_when: true
+
+- name: Remove ALB webhook so ArgoCD install can create Services (webhook is re-created when ALB Controller is installed)
+  ansible.builtin.shell: |
+    kubectl get mutatingwebhookconfigurations -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | while read name; do
+      case "$name" in
+        *elbv2*|*aws-load-balancer*|*load-balancer-webhook*) kubectl delete mutatingwebhookconfiguration "$name" --ignore-not-found=true ;;
+      esac
+    done
+  environment: "{{ helm_env }}"
+  register: remove_webhook
+  changed_when: remove_webhook.rc == 0
+  failed_when: false
+
+- name: Copy ArgoCD Fargate toleration values to host
+  ansible.builtin.copy:
+    src: argocd-fargate-values.yaml
+    dest: /tmp/argocd-fargate-values.yaml
+    mode: "0644"
+
+- name: Wait for argocd namespace to be gone only if it is Terminating
+  ansible.builtin.shell: |
+    status="$(kubectl get namespace argocd -o jsonpath='{.status.phase}' 2>/dev/null || echo 'NotFound')"
+    if [ "$status" = "Terminating" ]; then
+      for i in $(seq 1 24); do
+        if ! kubectl get namespace argocd 2>/dev/null; then
+          echo "Namespace argocd is gone"
+          exit 0
+        fi
+        echo "Waiting for namespace argocd to terminate... ($i/24)"
+        sleep 10
+      done
+      echo "Timeout: namespace still exists or terminating"
+      exit 1
+    else
+      echo "Namespace argocd status is '$status' (not Terminating); skip wait."
+      exit 0
+    fi
+  environment: "{{ helm_env }}"
+  register: argocd_ns_wait
+  changed_when: false
+  failed_when: argocd_ns_wait.rc != 0
+
+- name: Install ArgoCD into EKS (with Fargate toleration; hooks run so redis-secret-init creates TLS secrets)
+  ansible.builtin.shell: |
+    /usr/local/bin/helm upgrade --install argocd argo/argo-cd -n argocd --create-namespace --timeout 3m -f /tmp/argocd-fargate-values.yaml
+  environment: "{{ helm_env }}"
+  register: argocd_helm
+  changed_when: true
+  failed_when: argocd_helm.rc != 0
+
+- name: Show ArgoCD pod status before wait (diagnostic if wait fails)
+  ansible.builtin.shell: |
+    echo "=== Pods in argocd ==="
+    kubectl get pods -n argocd -o wide 2>/dev/null || true
+    echo "=== Recent events in argocd ==="
+    kubectl get events -n argocd --sort-by='.lastTimestamp' 2>/dev/null | tail -20 || true
+  environment: "{{ helm_env }}"
+  changed_when: false
+
+- name: Remove dex-server deployment if present (we disabled Dex; leftover would block wait)
+  ansible.builtin.shell: kubectl delete deployment argocd-dex-server -n argocd --ignore-not-found=true
+  environment: "{{ helm_env }}"
+  changed_when: false
+
+- name: Wait for ArgoCD deployments to be ready (max 5 min; if Pending, add argocd to Fargate profile and re-run)
+  ansible.builtin.shell: |
+    kubectl wait --for=condition=available --timeout=300s deployment --all -n argocd
+  environment: "{{ helm_env }}"
+  register: argocd_verify
+  changed_when: false
+  failed_when: argocd_verify.rc != 0
+
+- name: Wait for all ArgoCD pods to be Ready (covers application-controller StatefulSet and all controllers)
+  ansible.builtin.shell: |
+    for i in $(seq 1 30); do
+      not_ready="$(kubectl get pods -n argocd -o jsonpath='{range .items[*]}{.metadata.name} {.status.containerStatuses[*].ready}{"\n"}{end}' \
+        | awk '$2 != "true" {print $1}')"
+      if [ -z "$not_ready" ]; then
+        echo "All ArgoCD pods are Ready"
+        exit 0
+      fi
+      echo "Waiting for ArgoCD pods to be Ready (attempt $i/30). Not ready: $not_ready"
+      sleep 10
+    done
+    echo "Timeout: Some ArgoCD pods are not Ready"
+    exit 1
+  environment: "{{ helm_env }}"
+  register: argocd_pods_verify
+  changed_when: false
+  failed_when: argocd_pods_verify.rc != 0
+
+- name: Show ArgoCD pods status
+  ansible.builtin.shell: kubectl get pods -n argocd
+  environment: "{{ helm_env }}"
+  changed_when: false
+
+- name: Copy ArgoCD Application manifest to host
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../argocd/application.yaml"
+    dest: /tmp/argocd-application.yaml
+    mode: "0644"
+
+- name: Apply ArgoCD Application (sync app from Git into cluster)
+  ansible.builtin.shell: kubectl apply -f /tmp/argocd-application.yaml
+  environment: "{{ helm_env }}"
+  register: argocd_apply
+  retries: 5
+  delay: 20
+  until: argocd_apply.rc == 0
+  changed_when: true
+
+- name: Get EKS cluster VPC ID (required for ALB controller on Fargate – no instance metadata)
+  ansible.builtin.shell: |
+    /usr/local/bin/aws eks describe-cluster --name {{ cluster_name }} --region {{ aws_region }} \
+      --query 'cluster.resourcesVpcConfig.vpcId' --output text
+  environment:
+    PATH: "/usr/local/bin:/usr/bin:/bin"
+  register: eks_vpc_id_out
+  changed_when: false
+
+- name: Copy ALB controller Fargate toleration values to host
+  ansible.builtin.copy:
+    src: alb-controller-fargate-values.yaml
+    dest: /tmp/alb-controller-fargate-values.yaml
+    mode: "0644"
+
+- name: Install AWS Load Balancer Controller (region + vpcId at top level for Fargate; no instance metadata)
+  ansible.builtin.shell: |
+    /usr/local/bin/helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+      -n kube-system \
+      --set clusterName={{ cluster_name }} \
+      --set serviceAccount.create=false \
+      --set serviceAccount.name=aws-load-balancer-controller \
+      --set region={{ aws_region }} \
+      --set vpcId={{ eks_vpc_id_out.stdout }} \
+      -f /tmp/alb-controller-fargate-values.yaml
+  environment: "{{ helm_env }}"
+  changed_when: true

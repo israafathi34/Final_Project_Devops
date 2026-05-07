@@ -1,0 +1,32 @@
+---
+# Configure Jenkins Shared Library, GitHub credentials, and seed pipeline job
+# via Groovy init scripts in $JENKINS_HOME/init.groovy.d.
+
+- name: Ensure Jenkins init.groovy.d directory exists
+  ansible.builtin.file:
+    path: "{{ jenkins_home }}/init.groovy.d"
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: "0755"
+
+- name: Deploy Groovy init script to configure Shared Library and GitHub credentials
+  ansible.builtin.template:
+    src: global-shared-library.groovy.j2
+    dest: "{{ jenkins_home }}/init.groovy.d/global-shared-library.groovy"
+    owner: jenkins
+    group: jenkins
+    mode: "0644"
+
+- name: Deploy Groovy init script to create seed pipeline job
+  ansible.builtin.template:
+    src: seed-pipeline-job.groovy.j2
+    dest: "{{ jenkins_home }}/init.groovy.d/seed-pipeline-job.groovy"
+    owner: jenkins
+    group: jenkins
+    mode: "0644"
+
+- name: Restart Jenkins to load Groovy init script
+  ansible.builtin.service:
+    name: jenkins
+    state: restarted

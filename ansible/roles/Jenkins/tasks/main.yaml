@@ -1,0 +1,113 @@
+---
+# Use shell for yum so we don't require the dnf Python module under python3.8
+- name: Update all packages
+  ansible.builtin.shell: yum update -y
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Install required packages (Java 21 for Jenkins 2.541 LTS)
+  ansible.builtin.shell: |
+    yum install -y git docker trivy tar unzip vim nano curl telnet \
+      net-tools iputils dnsutils tcpdump traceroute netcat nmap wireshark fontconfig
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+# Jenkins 2.541 LTS needs Java 17+. Use Corretto 17 from amazon-linux-extras (works on AL2)
+- name: Enable Corretto 17 and install Java 17 for Jenkins LTS
+  ansible.builtin.shell: |
+    amazon-linux-extras enable corretto17
+    yum install -y java-17-amazon-corretto
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Set Java 17 as system default
+  ansible.builtin.shell: |
+    J17=$(ls -d /usr/lib/jvm/java-17-amazon-corretto* 2>/dev/null | head -1)
+    if [ -n "$J17" ] && [ -x "$J17/bin/java" ]; then
+      alternatives --set java "$J17/bin/java" 2>/dev/null || true
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+  ignore_errors: true
+
+- name: Start and enable Docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add Jenkins repo (official LTS rpm-stable)
+  ansible.builtin.get_url:
+    url: https://pkg.jenkins.io/rpm-stable/jenkins.repo
+    dest: /etc/yum.repos.d/jenkins.repo
+    mode: "0644"
+    force: true
+
+- name: Import Jenkins 2026 LTS GPG key
+  ansible.builtin.shell: rpm --import https://pkg.jenkins.io/rpm-stable/jenkins.io-2026.key
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Install Jenkins
+  ansible.builtin.shell: yum install -y jenkins
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Start and enable Jenkins
+  ansible.builtin.service:
+    name: jenkins
+    state: started
+    enabled: true
+
+- name: Add Jenkins user to docker group
+  ansible.builtin.user:
+    name: jenkins
+    groups: docker
+    append: true
+  notify: Restart Jenkins
+
+- name: Install kubectl (match EKS 1.30)
+  ansible.builtin.get_url:
+    url: https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.14/2025-11-13/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+
+- name: Install AWS CLI v2 (required for EKS exec auth v1beta1; AL2 default is v1 which uses v1alpha1)
+  ansible.builtin.shell: |
+    if ! aws --version 2>/dev/null | grep -q 'aws-cli/2'; then
+      curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+      unzip -o -q /tmp/awscliv2.zip -d /tmp
+      /tmp/aws/install -i /usr/local/aws-cli -b /usr/local/bin --update
+      rm -rf /tmp/aws /tmp/awscliv2.zip
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Update kubeconfig
+  ansible.builtin.shell: |
+    export PATH="/usr/local/bin:$PATH"
+    aws eks update-kubeconfig --name {{ cluster_name }} --region {{ aws_region }}
+
+- name: Fix kubeconfig exec apiVersion (v1alpha1 not supported by Helm/kubectl)
+  ansible.builtin.shell: |
+    [ -f /root/.kube/config ] && sed -i 's/client\.authentication\.k8s\.io\/v1alpha1/client.authentication.k8s.io\/v1beta1/g' /root/.kube/config || true
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Copy kubeconfig to ec2-user so kubectl works when SSH as ec2-user (not just root)
+  ansible.builtin.shell: |
+    mkdir -p /home/ec2-user/.kube
+    cp /root/.kube/config /home/ec2-user/.kube/config
+    chown -R ec2-user:ec2-user /home/ec2-user/.kube
+  changed_when: true
+
+- name: Configure Jenkins Shared Library (JCasC)
+  ansible.builtin.include_tasks: jenkins-shared-library.yaml

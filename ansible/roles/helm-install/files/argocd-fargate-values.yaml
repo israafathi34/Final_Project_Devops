@@ -1,0 +1,19 @@
+# Allow Argo CD pods to schedule on EKS Fargate nodes (they have taint eks.amazonaws.com/compute-type: fargate)
+global:
+  tolerations:
+    - key: eks.amazonaws.com/compute-type
+      operator: Equal
+      value: fargate
+      effect: NoSchedule
+
+# Disable Dex (avoids server.secretkey missing); use Argo CD built-in auth (admin / local users)
+dex:
+  enabled: false
+
+# Repo-server probes are too aggressive on Fargate and cause CrashLoopBackOff.
+# For this project we disable them so the pod can stay Running on slower startup.
+repoServer:
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
