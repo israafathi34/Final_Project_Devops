@@ -1,5 +1,5 @@
 :root {
-    --primary-color: #703278;
+    --primary-color: #fd88ce;
     --accent-color: #dfcde0;
     --text-light: #f8f9fa;
     --glass-bg: rgba(255, 255, 255, 0.05);
@@ -9,7 +9,7 @@
 body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
-    background: radial-gradient(circle at top left, #240f27, #1a0a1d);
+    background: radial-gradient(circle at top left, #262526, #54355a);
     color: var(--text-light);
     display: flex;
     justify-content: center;

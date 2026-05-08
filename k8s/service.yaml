@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ivolve-app-service
-  namespace: ivolve
+  name: DEPI-app-service
+  namespace: DEPI
 spec:
   type: ClusterIP
   selector:
-    app: ivolve-app
+    app: DEPI-app
   ports:
     - port: 80
       targetPort: 5000
