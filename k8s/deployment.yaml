@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: DEPI-app
-  namespace: DEPI
+  name: depi-app
+  namespace: depi
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: DEPI-app
+      app: depi-app
   template:
     metadata:
       labels:
-        app: DEPI-app
+        app: depi-app
     spec:
       containers:
-        - name: DEPI-app
-          image: 183631347882.dkr.ecr.us-east-1.amazonaws.com/DEPI-app:4
+        - name: depi-app
+          image: 183631347882.dkr.ecr.us-east-1.amazonaws.com/depi-app:4
           ports:
             - containerPort: 5000
           resources:

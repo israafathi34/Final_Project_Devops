@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: DEPI-app-ingress
-  namespace: DEPI
+  name: depi-app-ingress
+  namespace: depi
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -18,6 +18,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: DEPI-app-service
+                name: depi-app-service
                 port:
                   number: 80
