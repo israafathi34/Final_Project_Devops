@@ -1,16 +1,20 @@
 :root {
-    --primary-color: #fd88ce;
-    --accent-color: #dfcde0;
-    --text-light: #f8f9fa;
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    /* تطبيق الباليت الجديدة */
+    --primary-color: #F9B2D7;   /* الوردي - للتركيز والعناوين */
+    --accent-color: #7DAACB;    /* السماوي - للتفاعل واللمسات الإضافية */
+    --bg-light: #CFECF3;        /* الأخضر المصفر - كخلفية فاتحة جداً */
+    --bg-soft: #73A5CA;         /* الأخضر الباستيل - للتدرج */
+    --text-dark: #4a4a4a;       /* لون نص غامق ليتناسب مع الخلفية الفاتحة */
+    --glass-bg: rgba(255, 255, 255, 0.4); /* شفافية بيضاء أعلى لتناسب المظهر الفاتح */
+    --glass-border: rgba(255, 255, 255, 0.6);
 }
 
 body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
-    background: radial-gradient(circle at top left, #262526, #54355a);
-    color: var(--text-light);
+    /* تدرج ناعم باستخدام ألوان الباليت */
+    background: linear-gradient(135deg, var(--bg-light), var(--bg-soft), var(--accent-color));
+    color: var(--text-dark);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -18,13 +22,13 @@ body {
     overflow: hidden;
 }
 
-/* خلفية متحركة خفيفة */
+/* خلفية متحركة خفيفة تناسب الألوان الفاتحة */
 .background-overlay {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-    opacity: 0.1;
+    background: url('https://www.transparenttextures.com/patterns/cubes.png');
+    opacity: 0.2;
     z-index: -1;
 }
 
@@ -33,51 +37,54 @@ body {
     z-index: 1;
 }
 
-/* الكارت الزجاجي */
+/* الكارت الزجاجي المحسن للألوان الفاتحة */
 .glass-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
+    border-radius: 32px;
     padding: 50px;
     max-width: 800px;
-    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+    /* ظل ناعم ملون يتناسب مع الباليت */
+    box-shadow: 0 20px 40px rgba(175, 200, 180, 0.2);
     text-align: center;
     animation: slideUp 1s ease-out;
 }
 
 .badge {
-    background: rgba(223, 205, 224, 0.1);
-    color: var(--accent-color);
-    padding: 5px 15px;
+    background: white;
+    color: #ed8bbd; /* درجة أغمق قليلاً من الوردي للوضوح */
+    padding: 6px 18px;
     border-radius: 20px;
     font-size: 0.8rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     display: inline-block;
     margin-bottom: 20px;
-    border: 1px solid rgba(223, 205, 224, 0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .title {
     font-size: 2.8rem;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0;
-    background: linear-gradient(to right, #fff, var(--accent-color));
+    /* تدرج بين الوردي والسماوي */
+    background: linear-gradient(to right, #e87fb6, #8bc9d7);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
     font-size: 1.2rem;
-    font-weight: 300;
-    color: #b0bec5;
+    font-weight: 400;
+    color: #78909c;
     margin-top: 10px;
 }
 
 .subtitle span {
-    color: var(--accent-color);
+    color: #e87fb6;
     font-weight: 600;
 }
 
@@ -87,39 +94,38 @@ body {
     justify-content: center;
     gap: 30px;
     margin: 35px 0;
-    font-size: 2rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 2.2rem;
+    color: rgba(74, 74, 74, 0.4);
 }
 
 .tech-stack i {
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .tech-stack i:hover {
-    color: var(--accent-color);
-    transform: translateY(-5px);
-    text-shadow: 0 0 15px var(--accent-color);
+    color: #252f31;
+    transform: translateY(-8px) scale(1.1);
+    filter: drop-shadow(0 5px 10px rgba(139, 201, 215, 0.5));
 }
 
 .description {
     font-size: 1.1rem;
     line-height: 1.8;
-    color: #cfd8dc;
+    color: #181818;
     margin-bottom: 30px;
 }
 
 .footer-note {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.3);
-    border-top: 1px solid var(--glass-border);
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.5);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
     padding-top: 20px;
 }
 
-/* Animations */
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(40px);
     }
     to {
         opacity: 1;
@@ -127,8 +133,7 @@ body {
     }
 }
 
-/* Responsive */
 @media (max-width: 600px) {
-    .glass-card { padding: 30px; }
-    .title { font-size: 2rem; }
+    .glass-card { padding: 35px 20px; }
+    .title { font-size: 2.1rem; }
 }
