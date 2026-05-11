@@ -60,11 +60,44 @@ pipeline {
             }
         }
 
+        // stage('PushImage') {
+        //     steps {
+        //         script {
+        //             def imageName = "${ECR_IMAGE}:${IMAGE_TAG}"
+        //             pushImageECR(imageName, AWS_REGION)
+        //         }
+        //     }
+        // }
         stage('PushImage') {
             steps {
                 script {
-                    def imageName = "${ECR_IMAGE}:${IMAGE_TAG}"
-                    pushImageECR(imageName, AWS_REGION)
+                    echo "============================================"
+                    echo "Stage: PushImageECR"
+                    echo "============================================"
+
+                    withCredentials([
+                        string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
+
+                        sh '''
+                            echo "Configuring AWS credentials..."
+
+                            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                            aws configure set region us-east-1
+
+                            echo "Logging into ECR..."
+
+                            aws ecr get-login-password --region us-east-1 \
+                            | docker login --username AWS --password-stdin 532334935385.dkr.ecr.us-east-1.amazonaws.com
+
+                            echo "Pushing image..."
+
+                            docker push 532334935385.dkr.ecr.us-east-1.amazonaws.com/depi:4
+                            docker push 532334935385.dkr.ecr.us-east-1.amazonaws.com/depi:latest
+                        '''
+                    }
                 }
             }
         }
