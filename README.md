@@ -2686,15 +2686,7 @@ Common checks:
 
 ---
 
-### 11.3 — Acknowledgments
-
-- **iVolve Training** — for the training program, mentorship, and project specification.
-- **NTI (National Telecommunication Institute)** — if applicable, for academic support.
-- Mentors, instructors, and peers who provided feedback and helped debug tricky AWS/Kubernetes issues.
-
----
-
-### 11.4 — License
+### 11.3 — License
 
 - This project is licensed under the terms of the license specified in the root `LICENSE` file (e.g. MIT).
 - You are free to use, modify and distribute under those terms; see `LICENSE` for details.

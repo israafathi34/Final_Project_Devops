@@ -13,11 +13,12 @@ pipeline {
         ECR_IMAGE    = "${ECR_REGISTRY}/depi"
         AWS_REGION   = "us-east-1"
         // GitHub credential ID (username/password) configured by Ansible from Vault; repo URL for push
-        GITHUB_CREDENTIAL_ID = "github-credentials"
+        // GITHUB_CREDENTIAL_ID = "github-credentials"
         GITHUB_REPO_URL      = "https://github.com/israafathi34/Final_Project_Devops.git"
     }
     
     stages {
+        
         stage('Checkout') {
             steps {
                 echo "Cloning repository..."
