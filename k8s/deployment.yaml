@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: depi-app
-          image: 532334935385.dkr.ecr.us-east-1.amazonaws.com/depi
+          image: 532334935385.dkr.ecr.us-east-1.amazonaws.com/depi:12
           ports:
             - containerPort: 5000
           resources:
