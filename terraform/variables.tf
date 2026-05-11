@@ -16,7 +16,7 @@ variable "aws_profile" {
 variable "aws_account_id" {
   type        = string
   description = "AWS account ID"
-  default     = "183631347882"
+  default     = "532334935385"
 }
 
 variable "AWS_ACCESS_KEY_ID" {
@@ -37,7 +37,7 @@ variable "AWS_SECRET_ACCESS_KEY" {
 variable "project_name" {
   type        = string
   description = "Project name used for resource naming"
-  default     = "ivolve"
+  default     = "depi"
 }
 
 # -----------------------------------------------------------------------------
@@ -203,7 +203,7 @@ variable "sg_ingress_protocol" {
 variable "ecr_repository_name" {
   type        = string
   description = "ECR repository name for the application image (Jenkins pushes here)"
-  default     = "ivolve-app"
+  default     = "depi-app"
 }
 
 # -----------------------------------------------------------------------------
@@ -212,7 +212,7 @@ variable "ecr_repository_name" {
 variable "eks_cluster_name" {
   type        = string
   description = "EKS cluster name"
-  default     = "ivolve-eks"
+  default     = "depi-eks"
 }
 
 variable "eks_cluster_version" {

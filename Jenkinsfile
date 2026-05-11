@@ -1,20 +1,20 @@
-@Library('ivolve-shared-library@main') _
+@Library('depi-shared-library@main') _
 // Note: If using filesystem-based library (not Git), configure in Jenkins UI:
 // Manage Jenkins → Configure System → Global Pipeline Libraries
 // Set "Default version" to "master" or leave empty, then you can use:
-// @Library('ivolve-shared-library') _  (without @main)
+// @Library('depi-shared-library') _  (without @main)
 
 pipeline {
     agent any
     
     environment {
         IMAGE_TAG    = "${env.BUILD_NUMBER}"
-        ECR_REGISTRY = "183631347882.dkr.ecr.us-east-1.amazonaws.com"
-        ECR_IMAGE    = "${ECR_REGISTRY}/ivolve-app"
+        ECR_REGISTRY = "532334935385.dkr.ecr.us-east-1.amazonaws.com"
+        ECR_IMAGE    = "${ECR_REGISTRY}/depi"
         AWS_REGION   = "us-east-1"
         // GitHub credential ID (username/password) configured by Ansible from Vault; repo URL for push
         GITHUB_CREDENTIAL_ID = "github-credentials"
-        GITHUB_REPO_URL      = "https://github.com/tarek-code/CloudDevOpsProject.git"
+        GITHUB_REPO_URL      = "https://github.com/israafathi34/Final_Project_Devops.git"
     }
     
     stages {
@@ -31,7 +31,7 @@ pipeline {
                         useManualClone = true
                         sh """
                             rm -rf Jenkins_App || true
-                            git clone https://github.com/tarek-code/CloudDevOpsProject.git
+                            git clone https://github.com/israafathi34/Final_Project_Devops.git
                         """
                     }
                     env.USE_MANUAL_CLONE = useManualClone.toString()

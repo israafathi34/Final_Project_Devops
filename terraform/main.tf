@@ -97,6 +97,7 @@ data "aws_ami" "amazon_linux" {
     values = [var.ami_name_filter]
   }
 }
+
 ##############################
 # 4️⃣ IAM role for Jenkins EC2 (ECR push + EKS describe)
 ##############################
