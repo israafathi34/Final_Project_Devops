@@ -295,16 +295,16 @@ locals {
 # EKS must still be created in the same apply (module.eks above).
 # Note: OIDC provider may already exist from EKS cluster creation; Terraform will reference it.
 # Use standard format (oidc.eks...) that Kubernetes actually uses for IRSA tokens
-resource "aws_iam_openid_connect_provider" "eks" {
-  url             = "https://${local.oidc_issuer}"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+# resource "aws_iam_openid_connect_provider" "eks" {
+#   url             = "https://${local.oidc_issuer}"
+#   client_id_list  = ["sts.amazonaws.com"]
+#   thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
 
-  # Prevent errors if provider already exists (created by EKS or previous run)
-  lifecycle {
-    create_before_destroy = false
-  }
-}
+#   # Prevent errors if provider already exists (created by EKS or previous run)
+#   lifecycle {
+#     create_before_destroy = false
+#   }
+# }
 
 resource "aws_iam_policy" "alb_controller" {
   name        = "AWSLoadBalancerControllerIAMPolicy"

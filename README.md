@@ -1,44 +1,10 @@
-# 📘 CloudDevOpsProject — Complete Technical Book
-
----
-
-## 📌 FRONT MATTER
-
-### 🏷️ Badges
-
-> **📌 Note:** Wire these to your real services (Jenkins job, Terraform Cloud workspace, etc.) when you deploy.
-
-Build
-Terraform
-Ansible
-Docker
-Kubernetes
-AWS EKS
-ArgoCD
-License
-
----
-
-### 📸 Screenshots
-
-> **📌 Note:** Filenames below are examples. Rename them to match the actual files you added (for example under a `Screenshots/` folder) so the images render correctly on GitHub.
-
-| Jenkins Pipeline View | ALB & Target Group | Final App Result |
-| --------------------- | ------------------ | ---------------- |
-| ![Jenkins Pipeline](Screenshots/jenkins-pipline-created-after-ansible-finished.png) | ![ALB & Target Group](Screenshots/aws-alb-info.png) | ![Final Result](Screenshots/final-result-from-alb.png) |
-
-- **Left**: Jenkins multi‑stage pipeline (build → scan → push → update manifests → post actions).  
-- **Middle**: Argo CD showing the application synced and healthy in the EKS cluster.  
-- **Right**: The Python/Flask app successfully served through the AWS ALB and Kubernetes Ingress.
+# 📘 Final_Project_Devops
 
 ---
 
 ### 📑 Table of Contents
 
-- [📘 CloudDevOpsProject — Complete Technical Book](#-clouddevopsproject--complete-technical-book)
-  - [📌 FRONT MATTER](#-front-matter)
-    - [🏷️ Badges](#️-badges)
-    - [📸 Screenshots](#-screenshots)
+- [📘 Final_Project_Devops ](#-Final_Project_Devops)
     - [📑 Table of Contents](#-table-of-contents)
   - [CHAPTER 0 — Introduction](#chapter-0--introduction)
     - [0.1 — What is This Project?](#01--what-is-this-project)
@@ -84,15 +50,12 @@ License
   - [CHAPTER 10 — Appendix: Original Documentation](#chapter-10--appendix-original-documentation)
   - [CHAPTER 11 — About the Author & Acknowledgments](#chapter-11--about-the-author--acknowledgments)
 
-> **📌 Note:** Due to the size of the project, some long files are shown as excerpts with `...` to indicate omitted lines. Explanations still cover the full behavior.
-
----
 
 ## CHAPTER 0 — Introduction
 
 ### 0.1 — What is This Project?
 
-CloudDevOpsProject is a **complete, cloud‑native CI/CD and GitOps pipeline** that takes a simple Python web app all the way from **source code on GitHub** to **a publicly accessible URL on AWS**, running on **EKS Fargate** behind an **Application Load Balancer (ALB)**.
+Final_Project_Devops is a **complete, cloud‑native CI/CD and GitOps pipeline** that takes a simple Python web app all the way from **source code on GitHub** to **a publicly accessible URL on AWS**, running on **EKS Fargate** behind an **Application Load Balancer (ALB)**.
 
 Concretely, this project:
 
@@ -182,7 +145,7 @@ In plain English, this is what happens from `git push` to “app live in browser
     - Commits and pushes the updated `k8s/` directory back to GitHub.
 10. **Argo CD sees the Git change**
   - `argocd/application.yaml` is configured with:
-    - `repoURL: https://github.com/.../CloudDevOpsProject.git`
+    - `repoURL: https://github.com/israafathi34/Final_Project_Devops.git`
     - `path: k8s`
     - `automated` sync (prune + selfHeal).
     - Argo CD reconciles cluster state → applies updated Deployment image.
@@ -1186,6 +1149,9 @@ output "vpc_id" {
 
 ---
 
+
+
+
 ## CHAPTER 2 — Configuration Management with Ansible
 
 This chapter explains how Ansible is used to turn the bare Jenkins EC2 instance created by Terraform into a fully configured **CI/CD control plane**, and how it installs cluster add‑ons (Argo CD and AWS Load Balancer Controller) using Helm. It covers:
@@ -1368,7 +1334,7 @@ ansible_become_timeout: 120
 ---
 jenkins_shared_library_name: "ivolve-shared-library"
 jenkins_shared_library_version: "main"
-jenkins_shared_library_repo: "https://github.com/tarek-code/CloudDevOpsProject.git"
+jenkins_shared_library_repo: "https://github.com/tarek-code/Final_Project_Devops.git"
 jenkins_shared_library_path: "Shared-Library"
 jenkins_home: "/var/lib/jenkins"
 jenkins_sysconfig: "/etc/sysconfig/jenkins"
@@ -1518,7 +1484,7 @@ jenkins_github_credential_id: "github-credentials"
 **Line-by-line:**
 - `path: "{{ jenkins_home }}/init.groovy.d"` — Directory where init scripts live; Jenkins runs them on startup.
 - `global-shared-library.groovy` — Configures the Shared Library and GitHub credentials.
-- `seed-pipeline-job.groovy` — Creates the CloudDevOpsProject pipeline job that uses the Jenkinsfile.
+- `seed-pipeline-job.groovy` — Creates the Final_Project_Devops pipeline job that uses the Jenkinsfile.
 - `state: restarted` — Restart Jenkins so init scripts run and changes take effect.
 
 ---
@@ -1558,7 +1524,7 @@ globalLibs.setLibraries(libs)
 **📄 File:** `ansible/roles/Jenkins/templates/seed-pipeline-job.groovy.j2`
 
 ```groovy
-def jobName = "{{ jenkins_seed_job_name | default('CloudDevOpsProject-pipeline', true) }}"
+def jobName = "{{ jenkins_seed_job_name | default('Final_Project_Devops-pipeline', true) }}"
 def repoUrl = "{{ jenkins_shared_library_repo }}"
 def branch = "{{ jenkins_shared_library_version }}"
 def credId = "{{ jenkins_github_credential_id }}"
@@ -1579,7 +1545,7 @@ job.save()
 **Purpose:** Groovy init script that creates or updates the pipeline job. The job clones the repo, loads the Jenkinsfile, and runs the CI/CD pipeline.
 
 **Line-by-line:**
-- `jobName` — Job name in Jenkins (e.g. `CloudDevOpsProject-pipeline`).
+- `jobName` — Job name in Jenkins (e.g. `Final_Project_Devops-pipeline`).
 - `repoUrl`, `branch` — Git repo and branch (same as Shared Library).
 - `credId` — Jenkins credential ID for Git clone.
 - `jenkinsfilePath` — Path to Jenkinsfile in repo (e.g. `Jenkinsfile`).
@@ -1925,7 +1891,7 @@ pipeline {
         ECR_IMAGE    = "${ECR_REGISTRY}/ivolve-app"
         AWS_REGION   = "us-east-1"
         GITHUB_CREDENTIAL_ID = "github-credentials"
-        GITHUB_REPO_URL      = "https://github.com/tarek-code/CloudDevOpsProject.git"
+        GITHUB_REPO_URL      = "https://github.com/tarek-code/Final_Project_Devops.git"
     }
     stages {
         stage('Checkout') { ... }
@@ -2164,7 +2130,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/tarek-code/CloudDevOpsProject.git
+    repoURL: https://github.com/tarek-code/Final_Project_Devops.git
     targetRevision: main
     path: k8s
   destination:
@@ -2590,7 +2556,7 @@ When ALB targets are healthy but connectivity fails:
       - Creates/updates GitHub credentials (if provided via vault/extra-vars).
       - Configures Global Pipeline Library (`ivolve-shared-library`) pointing to this repo and `Shared-Library` path.
     - `seed-pipeline-job.groovy.j2`:
-      - Creates/updates a seed pipeline job (`CloudDevOpsProject-pipeline`) that uses this repo + `Jenkinsfile`.
+      - Creates/updates a seed pipeline job (`Final_Project_Devops-pipeline`) that uses this repo + `Jenkinsfile`.
   - Restarted Jenkins via Ansible handler to apply changes.
 - **What to learn:**  
   - Use **JCasC** (Configuration as Code) and init scripts to fully automate Jenkins configuration.  
@@ -2669,16 +2635,14 @@ Common checks:
 
 ### 11.1 — About Me
 
-> **📌 Placeholder:** Replace with your real info.
-
-- **Name:** `Tarek` 
+- **Name:** `ISRAA` 
 - **Title:** `DevOps Engineer`
 
 ---
 
 ### 11.2 — Project Context
 
-- Built as a **graduation project for iVolve Training**.
+- Built as a **graduation project for DEPI Training**.
 - Demonstrates a **complete CI/CD + GitOps pipeline** on AWS:
   - Terraform → Ansible → Jenkins → Docker + Trivy → ECR → Argo CD → EKS Fargate → ALB.
 - Technologies exercised:
