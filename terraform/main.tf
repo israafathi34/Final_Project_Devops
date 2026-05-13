@@ -273,9 +273,9 @@ resource "aws_eks_addon" "coredns" {
     Name = "${var.project_name}-coredns-addon"
   }
   timeouts {
-    create = "60m" # Fargate clusters can take longer for CoreDNS to become ACTIVE
-    update = "60m"
-    delete = "40m"
+    create = "40m" # Fargate clusters can take longer for CoreDNS to become ACTIVE
+    update = "40m"
+    delete = "30m"
   }
 }
 
