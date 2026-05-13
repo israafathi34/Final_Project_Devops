@@ -1881,17 +1881,17 @@ It shows how using a Shared Library keeps the Jenkinsfile short and readable whi
 **📄 File:** `Jenkinsfile` (excerpt)
 
 ```groovy
-@Library('ivolve-shared-library@main') _
+@Library('depi-shared-library@main') _
 
 pipeline {
     agent any
     environment {
         IMAGE_TAG    = "${env.BUILD_NUMBER}"
-        ECR_REGISTRY = "183631347882.dkr.ecr.us-east-1.amazonaws.com"
-        ECR_IMAGE    = "${ECR_REGISTRY}/ivolve-app"
+        ECR_REGISTRY = "532334935385.dkr.ecr.us-east-1.amazonaws.com"
+        ECR_IMAGE    = "${ECR_REGISTRY}/depi"
         AWS_REGION   = "us-east-1"
         GITHUB_CREDENTIAL_ID = "github-credentials"
-        GITHUB_REPO_URL      = "https://github.com/tarek-code/Final_Project_Devops.git"
+        GITHUB_REPO_URL      = "https://github.com/israafathi34/Final_Project_Devops.git"
     }
     stages {
         stage('Checkout') { ... }
@@ -1906,10 +1906,10 @@ pipeline {
 }
 ```
 
-**Purpose:** Declarative pipeline using `ivolve-shared-library`. Runs stages: Checkout → BuildImage → ScanImage → PushImage → RemoveImageLocally → UpdateManifests → PushManifests. Environment variables define ECR and GitHub.
+**Purpose:** Declarative pipeline using `depi-shared-library`. Runs stages: Checkout → BuildImage → ScanImage → PushImage → RemoveImageLocally → UpdateManifests → PushManifests. Environment variables define ECR and GitHub.
 
 **Line-by-line:**
-- `@Library('ivolve-shared-library@main') _` — Loads the Shared Library from branch `main`; `_` means no import alias.
+- `@Library('depi-shared-library@main') _` — Loads the Shared Library from branch `main`; `_` means no import alias.
 - `agent any` — Runs on any available Jenkins agent.
 - `IMAGE_TAG = "${env.BUILD_NUMBER}"` — Uses build number as image tag.
 - `ECR_REGISTRY`, `ECR_IMAGE` — ECR URL and image name; must match Terraform ECR and Jenkins IAM.
