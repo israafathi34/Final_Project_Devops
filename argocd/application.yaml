@@ -1,19 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ivolve-app
+  name: depi-app
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/tarek-code/CloudDevOpsProject.git
+    repoURL: https://github.com/israafathi34/Final_Project_Devops.git
     targetRevision: main
     path: k8s
   destination:
     server: https://kubernetes.default.svc
-    namespace: ivolve
+    namespace: depi
   syncPolicy:
     automated:
       prune: true
